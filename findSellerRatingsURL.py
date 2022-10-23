@@ -4,11 +4,12 @@ Given a list of storefront names, find the associated SellerRatings URL for each
 
 import requests
 
-storefront = "Pattern -iServe-"
-sellerID = "A2EJCTH67GJMT3"
-url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
+# data for testing
+# storefront = "Pattern -iServe-"
+# sellerID = "A2EJCTH67GJMT3"
+# url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
 
-storefront = [
+storefronts = [
     "Pattern -iServe-",
     "Tipiliano",
     "KRISHNA ART;",
@@ -23,7 +24,7 @@ storefront = [
     "pets--lover",
     "バリューブックス　　　【防水梱包で、丁寧に発送します】"
 ]
-url = [
+urls = [
     "https://www.sellerratings.com/amazon/usa/pattern-iserve-",
     "https://www.sellerratings.com/amazon/italy/tipiliano",
     "https://www.sellerratings.com/amazon/india/krishna-art-",
@@ -38,7 +39,7 @@ url = [
     "https://www.sellerratings.com/amazon/uk/pets-lover",
     "https://www.sellerratings.com/amazon/japan/%E3%83%90%E3%83%AA%E3%83%A5%E3%83%BC%E3%83%96%E3%83%83%E3%82%AF%E3%82%B9-%E9%98%B2%E6%B0%B4%E6%A2%B1%E5%8C%85%E3%81%A7%E4%B8%81%E5%AF%A7%E3%81%AB%E7%99%BA%E9%80%81%E3%81%97%E3%81%BE%E3%81%99"
 ]
-sellerID = [
+sellerIDs = [
     "A2EJCTH67GJMT3",
     "AZLMOZ4VFVEK1",
     "A1L2Z4YE59KMJ4",
@@ -65,15 +66,52 @@ baseURLs = [
     'https://www.sellerratings.com/amazon/india/'
 ]
 
-# find possible SellerRatings url syntaxes of storefront
-newStorefront = len(storefront)
-for char in storefront:
-    # hyphen --> space
-    if char == chr(45):
+# find possible SellerRatings url paths
+possible_paths_dict = {}
+for storefront in storefronts:
+    possible_paths = []
+    num_of_hyphens_at_end = 5
+    new_name = [''] * (len(storefront) + num_of_hyphens_at_end)
+    pointer = 0
+
+    for idx, char in enumerate(storefront):
+        # leave alone if alphabet or number
+        if char.isalpha() or char.isnumeric():
+            new_name[pointer] = char.lower()
+            pointer += 1
+        else:
+            # leave alone if hyphen is the last character (unless the prior character was non-alphabet or and non-number)
+            if idx == len(storefront) - 1 and char == '-' and new_name[pointer - 1] != '-':
+                new_name[pointer] = '-'
+                pointer += 1
+            # replace consecutive spaces and/or hyphens with a single hyphen
+            elif char == '-' or char == ' ':
+                if new_name[pointer - 1].isalpha() or new_name[pointer - 1].isnumeric():
+                    new_name[pointer] = '-'
+                    pointer += 1
+            # ignore consecutive non-alphabets and non-numbers
+
+    possible_paths.append(''.join(new_name))
+
+    for num in range(num_of_hyphens_at_end):
+        new_name[pointer + num] = '-'
+        possible_paths.append(''.join(new_name))
+
+    possible_paths_dict[storefront] = possible_paths
 
 
-# find exact match using name
+# find the right url by comparing the storefront name to the one in the web page
+# for base in baseURLs:
+#     for storefront in possible_paths_dict:
+#         for path in possible_paths_dict[storefront]:
+#             url = ''.join([base, path])
+#             print(url)
+#             response = requests.get(url)
+#             response.raise_for_status()
+#             print(response)
 
-# find exact match using sellerID
+# verify url using sellerID
 
+# ask for user input
 
+# return findings
