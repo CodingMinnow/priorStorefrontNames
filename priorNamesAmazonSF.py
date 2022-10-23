@@ -1,9 +1,10 @@
 import re
-import requests
-from bs4 import BeautifulSoup
 from urllib.parse import urlparse, parse_qs
 
+from bs4 import BeautifulSoup
+import requests
 
+# data for testing
 url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
 sellerID = "A2EJCTH67GJMT3"
 # url = "https://www.sellerratings.com/amazon/italy/tipiliano"
