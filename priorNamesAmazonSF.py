@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 
-from storefrontPage import identifyKeyParagraph, verifySellerId, scrapePriorNames
+from storefrontPage import identifyKeyParagraph, getSellerID, getPriorNames
 
 # data for testing
 url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
@@ -17,9 +17,9 @@ def priorNamesAmazonSF(url, sellerID):
     soup = BeautifulSoup(response.content, "html.parser")
     keyPara = identifyKeyParagraph(soup)
         
-    if verifySellerId(keyPara, sellerID):
-        return scrapePriorNames(keyPara)
-    else:
-        raise Exception("Mismatch in seller ID and SellerRatings url")
+    if sellerID == getSellerID(keyPara):
+        return getPriorNames(keyPara)
+    
+    raise Exception("Mismatch in seller ID and SellerRatings url")
 
 priorNamesAmazonSF(url, sellerID)

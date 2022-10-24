@@ -15,7 +15,7 @@ def identifyKeyParagraph(soup):
     else:
         raise Exception("'For most recent reviews checkout' is not in the key paragraph")
 
-def scrapePriorNames(keyPara):
+def getPriorNames(keyPara):
     keySentence = str(keyPara.a.next_sibling)
     priorNames = []
 
@@ -26,15 +26,12 @@ def scrapePriorNames(keyPara):
     
     return priorNames
 
-def verifySellerId(keyPara, sellerID):
+def getStorefrontName(keyPara):
+    keySentence = str(keyPara.a.string)
+    return re.search('(.*) profile on Amazon.com', keySentence).group(1)
+
+def getSellerID(keyPara):
     # extract the seller ID of the storefront from the amazon url of the storefront
     url = keyPara.a.get('href')
     sellerRatingsSellerID = parse_qs(urlparse(url).query)
-
-    return sellerID == sellerRatingsSellerID['seller'][0]
-
-def getStorefrontName(response):
-
-
-def getSellerID(response):
-    
+    return sellerRatingsSellerID['seller'][0]
