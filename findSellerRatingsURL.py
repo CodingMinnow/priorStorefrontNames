@@ -1,76 +1,21 @@
 """
-Given a list of storefront names, find the associated SellerRatings URL for each
+Given an excel file of storefront names and sellerID (columns 1 and 2, respectively),
+Creates a new excel file with the SellerRatings URL for each storefront in column 3
 """
 
+from bs4 import BeautifulSoup
+import openpyxl
 import requests
 
-# data for testing
-# storefront = "Pattern -iServe-"
-# sellerID = "A2EJCTH67GJMT3"
-# url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
+import datetime
+import os
 
-storefronts = [
-    "Pattern -iServe-",
-    "Tipiliano",
-    "KRISHNA ART;",
-    "Y2V®",
-    "TechTack(EU)",
-    "A & A Agencies",
-    "A A AGENCIES",
-    "A A AGENCIES",
-    "Assurant Europe Insurance N.V.",
-    "SHIV COLLECTION-",
-    "ブックオフオンライン",
-    "pets--lover",
-    "バリューブックス　　　【防水梱包で、丁寧に発送します】"
-]
-urls = [
-    "https://www.sellerratings.com/amazon/usa/pattern-iserve-",
-    "https://www.sellerratings.com/amazon/italy/tipiliano",
-    "https://www.sellerratings.com/amazon/india/krishna-art-",
-    "https://www.sellerratings.com/amazon/india/y2v",
-    "https://www.sellerratings.com/amazon/uk/techtackeu",
-    "https://www.sellerratings.com/amazon/india/a-a-agencies--",
-    "https://www.sellerratings.com/amazon/india/a-a-agencies-",
-    "https://www.sellerratings.com/amazon/india/a-a-agencies",
-    "https://www.sellerratings.com/amazon/germany/assurant-europe-insurance-nv-",
-    "https://www.sellerratings.com/amazon/india/shiv-collection-",
-    "https://www.sellerratings.com/amazon/japan/%E3%83%96%E3%83%83%E3%82%AF%E3%82%AA%E3%83%95%E3%82%AA%E3%83%B3%E3%83%A9%E3%82%A4%E3%83%B3",
-    "https://www.sellerratings.com/amazon/uk/pets-lover",
-    "https://www.sellerratings.com/amazon/japan/%E3%83%90%E3%83%AA%E3%83%A5%E3%83%BC%E3%83%96%E3%83%83%E3%82%AF%E3%82%B9-%E9%98%B2%E6%B0%B4%E6%A2%B1%E5%8C%85%E3%81%A7%E4%B8%81%E5%AF%A7%E3%81%AB%E7%99%BA%E9%80%81%E3%81%97%E3%81%BE%E3%81%99"
-]
-sellerIDs = [
-    "A2EJCTH67GJMT3",
-    "AZLMOZ4VFVEK1",
-    "A1L2Z4YE59KMJ4",
-    "A39DG6UK0UIUH1",
-    "A3NULHOW1R9CIG",
-    "A1KSQZQJQ8A2Q3",
-    "A31XQ1SNFRULPQ",
-    "A39L3W0FABL7RL",
-    "A2N284U23UVV38",
-    "A1NCCEAREVWNUG",
-    "ACQ147NXSZMKZ",
-    "ABCL8ENSCFGNK",
-    "A3BAVLDFUS0PHE"
-]
+from storefrontPage import identifyKeyParagraph, getStorefrontName, getSellerID, baseURLs
 
-baseURLs = [
-    'https://www.sellerratings.com/amazon/usa/',
-    'https://www.sellerratings.com/amazon/uk/',
-    'https://www.sellerratings.com/amazon/germany/',
-    'https://www.sellerratings.com/amazon/france/',
-    'https://www.sellerratings.com/amazon/italy/',
-    'https://www.sellerratings.com/amazon/spain/',
-    'https://www.sellerratings.com/amazon/japan/',
-    'https://www.sellerratings.com/amazon/india/'
-]
-
-# find possible SellerRatings url paths
-possible_paths_dict = {}
-for storefront in storefronts:
+# function that generates possible SellerRatings url paths given a storefront name
+def convertStorefrontNameToPath(storefront):
     possible_paths = []
-    num_of_hyphens_at_end = 5
+    num_of_hyphens_at_end = 3
     new_name = [''] * (len(storefront) + num_of_hyphens_at_end)
     pointer = 0
 
@@ -97,21 +42,84 @@ for storefront in storefronts:
         new_name[pointer + num] = '-'
         possible_paths.append(''.join(new_name))
 
-    possible_paths_dict[storefront] = possible_paths
+    return possible_paths
 
 
-# find the right url by comparing the storefront name to the one in the web page
-# for base in baseURLs:
-#     for storefront in possible_paths_dict:
-#         for path in possible_paths_dict[storefront]:
-#             url = ''.join([base, path])
-#             print(url)
-#             response = requests.get(url)
-#             response.raise_for_status()
-#             print(response)
+# function that finds the right url by comparing the storefront name to the one in the web page
+def getRightPath(storefront, sellerID, paths):
+    valid_urls = []
+    
+    for base in baseURLs:
+        for path in paths:
+            url = ''.join([base, path])
+            response = requests.get(url)
 
-# verify url using sellerID
+            if response.status_code == 200:
+                soup = BeautifulSoup(response.content, "html.parser")
+                keyPara = identifyKeyParagraph(soup)
+                
+                # if sellerID matches, found exact match
+                if sellerID == getSellerID(keyPara):
+                    return url
 
-# ask for user input
+                # if storefront name matches, move on to next country
+                if storefront == getStorefrontName(keyPara):
+                    valid_urls.append(url)
+                    break
+    
+    # if one valid url, found exact match
+    if len(valid_urls) == 1:
+        return valid_urls[0]
+    # get user input to select one url
+    elif len(valid_urls) > 1:
+        userConfirm = ''
 
-# return findings
+        while userConfirm == 'n' or userConfirm == '':
+            userInput = ''
+            userConfirm = ''
+            first_try = True
+            first_try_confirm = True
+            
+            while not userInput.isnumeric() or int(userInput) not in range(len(valid_urls)):
+                if first_try:
+                    print(f'For the storefront "{storefront}", there are more than one possible urls. They are as follows: ')
+                    for idx, valid_url in enumerate(valid_urls):
+                        print(f'{idx}: {valid_url}')
+                    print('Please review and return the number corresponding to the correct url. If none of them are correct, please type in "none" or "n".')
+                else:
+                    print('Try again. Your input is invalid.')
+                first_try = False
+                userInput = input()
+
+            while userConfirm.lower() not in {'y','n'}:
+                if first_try_confirm:
+                    print(f'You selected {userInput}. If it is correct, please type "y". Else, "n".')
+                else:
+                    print('Try again. Your input is invalid.')
+                first_try_confirm = False
+                userConfirm = input()
+        
+        if userInput.isalpha() and (userInput.lower() == "none" or userInput.lower() == "n"):
+            return None
+        else:
+            return valid_url[userInput]
+
+# load excel
+file_path = '../data.xlsx'
+workbook = openpyxl.load_workbook(file_path) # Q: should i get the user to specify the spreadsheet?
+sheet = workbook.active
+
+# create a column to add urls
+sheet.insert_cols(3)
+sheet['C1'] = "url"
+
+# find each storefront's url and add to excel
+for row_idx in range(2, sheet.max_row+1):
+    storefront = sheet.cell(row=row_idx, column=1).value
+    sellerID = sheet.cell(row=row_idx, column=2).value
+    print(f'storefront: {storefront}')
+    possible_paths = convertStorefrontNameToPath(storefront)
+    sheet['C'+str(row_idx)] = getRightPath(storefront, sellerID, possible_paths)
+
+# try to save
+workbook.save(os.path.splitext(file_path)[0] + " - " + datetime.datetime.now().strftime("%m-%d-%Y %I %M %p") + '.xlsx')

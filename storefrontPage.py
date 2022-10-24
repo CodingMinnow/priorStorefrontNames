@@ -4,6 +4,17 @@ from urllib.parse import urlparse, parse_qs
 from bs4 import BeautifulSoup
 import requests
 
+baseURLs = [
+    'https://www.sellerratings.com/amazon/usa/',
+    'https://www.sellerratings.com/amazon/uk/',
+    'https://www.sellerratings.com/amazon/germany/',
+    'https://www.sellerratings.com/amazon/france/',
+    'https://www.sellerratings.com/amazon/italy/',
+    'https://www.sellerratings.com/amazon/spain/',
+    # 'https://www.sellerratings.com/amazon/japan/',
+    'https://www.sellerratings.com/amazon/india/'
+]
+
 def identifyKeyParagraph(soup):
     # second to last paragraph contains prior storefront names
     paragraphs = soup.find_all('p')
@@ -28,7 +39,7 @@ def getPriorNames(keyPara):
 
 def getStorefrontName(keyPara):
     keySentence = str(keyPara.a.string)
-    return re.search('(.*) profile on Amazon.com', keySentence).group(1)
+    return re.search('(.*) profile on Amazon(.*)', keySentence).group(1)
 
 def getSellerID(keyPara):
     # extract the seller ID of the storefront from the amazon url of the storefront
