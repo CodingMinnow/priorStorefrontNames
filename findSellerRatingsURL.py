@@ -10,7 +10,7 @@ import requests
 import datetime
 import os
 
-from storefrontPage import identifyKeyParagraph, getStorefrontName, getSellerID, baseURLs
+from storefrontPageUtils import identifyKeyParagraph, getStorefrontName, getSellerID, baseURLs
 
 # function that generates possible SellerRatings url paths given a storefront name
 def convertStorefrontNameToPath(storefront):

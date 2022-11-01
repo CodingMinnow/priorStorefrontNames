@@ -1,7 +1,7 @@
 from bs4 import BeautifulSoup
 import requests
 
-from storefrontPage import identifyKeyParagraph, getSellerID, getPriorNames
+from storefrontPageUtils import identifyKeyParagraph, getSellerID, getPriorNames
 
 # data for testing
 url = "https://www.sellerratings.com/amazon/usa/pattern-iserve-"
