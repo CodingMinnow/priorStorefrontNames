@@ -2,8 +2,6 @@
 
 """
 
-from itertools import count
-from bs4 import BeautifulSoup
 import requests
 
 baseURLs = [
