@@ -10,7 +10,8 @@ import requests
 import datetime
 import os
 
-from storefrontPageUtils import identifyKeyParagraph, getStorefrontName, getSellerID, baseURLs
+from storefrontPageUtils import identifyKeyParagraph, getStorefrontName, getSellerID
+from mainPageUtils import baseURLs
 
 # function that generates possible SellerRatings url paths given a storefront name
 def convertStorefrontNameToPath(storefront):
@@ -51,7 +52,7 @@ def getRightPath(storefront, sellerID, paths):
     
     for base in baseURLs:
         for path in paths:
-            url = ''.join([base, path])
+            url = '/'.join([base, path])
             response = requests.get(url)
 
             if response.status_code == 200:
