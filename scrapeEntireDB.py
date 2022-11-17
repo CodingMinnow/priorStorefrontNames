@@ -1,5 +1,6 @@
 """
-
+Scrape all of the storefronts listed in the SellerRatings website (all 2500 for each country)
+Store the data (name, seller ID, prior names) to a MySQL database
 """
 
 from bs4 import BeautifulSoup
@@ -12,7 +13,7 @@ from decouple import config
 import logging
 import time
 
-from utils.mainPageUtils import *
+from utils.countryPageUtils import *
 from utils.storefrontPageUtils import *
 
 # execution time
