@@ -1,2 +1,5 @@
 Pipfile
 Pipfile.lock
+db.txt
+.env
+app.log

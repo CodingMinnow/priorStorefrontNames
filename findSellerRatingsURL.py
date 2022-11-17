@@ -10,8 +10,8 @@ import requests
 import datetime
 import os
 
-from storefrontPageUtils import identifyKeyParagraph, getStorefrontName, getSellerID
-from mainPageUtils import baseURLs
+from utils.storefrontPageUtils import identifyKeyParagraph, getStorefrontName, getSellerID
+from utils.mainPageUtils import base_urls
 
 # function that generates possible SellerRatings url paths given a storefront name
 def convertStorefrontNameToPath(storefront):
@@ -47,24 +47,24 @@ def convertStorefrontNameToPath(storefront):
 
 
 # function that finds the right url by comparing the storefront name to the one in the web page
-def getRightPath(storefront, sellerID, paths):
+def getRightPath(storefront, seller_ID, paths):
     valid_urls = []
     
-    for base in baseURLs:
+    for base in base_urls.values():
         for path in paths:
             url = '/'.join([base, path])
             response = requests.get(url)
 
             if response.status_code == 200:
                 soup = BeautifulSoup(response.content, "html.parser")
-                keyPara = identifyKeyParagraph(soup)
+                key_para = identifyKeyParagraph(soup)
                 
                 # if sellerID matches, found exact match
-                if sellerID == getSellerID(keyPara):
+                if seller_ID == getSellerID(key_para):
                     return url
 
                 # if storefront name matches, move on to next country
-                if storefront == getStorefrontName(keyPara):
+                if storefront == getStorefrontName(key_para):
                     valid_urls.append(url)
                     break
     
@@ -73,15 +73,15 @@ def getRightPath(storefront, sellerID, paths):
         return valid_urls[0]
     # get user input to select one url
     elif len(valid_urls) > 1:
-        userConfirm = ''
+        user_confirm = ''
 
-        while userConfirm == 'n' or userConfirm == '':
-            userInput = ''
-            userConfirm = ''
+        while user_confirm == 'n' or user_confirm == '':
+            user_input = ''
+            user_confirm = ''
             first_try = True
             first_try_confirm = True
             
-            while not userInput.isnumeric() or int(userInput) not in range(len(valid_urls)):
+            while not user_input.isnumeric() or int(user_input) not in range(len(valid_urls)):
                 if first_try:
                     print(f'For the storefront "{storefront}", there are more than one possible urls. They are as follows: ')
                     for idx, valid_url in enumerate(valid_urls):
@@ -90,20 +90,20 @@ def getRightPath(storefront, sellerID, paths):
                 else:
                     print('Try again. Your input is invalid.')
                 first_try = False
-                userInput = input()
+                user_input = input()
 
-            while userConfirm.lower() not in {'y','n'}:
+            while user_confirm.lower() not in {'y','n'}:
                 if first_try_confirm:
-                    print(f'You selected {userInput}. If it is correct, please type "y". Else, "n".')
+                    print(f'You selected {user_input}. If it is correct, please type "y". Else, "n".')
                 else:
                     print('Try again. Your input is invalid.')
                 first_try_confirm = False
-                userConfirm = input()
+                user_confirm = input()
         
-        if userInput.isalpha() and (userInput.lower() == "none" or userInput.lower() == "n"):
+        if user_input.isalpha() and (user_input.lower() == "none" or user_input.lower() == "n"):
             return None
         else:
-            return valid_url[userInput]
+            return valid_url[user_input]
 
 # load excel
 file_path = '../data.xlsx'
@@ -117,10 +117,10 @@ sheet['C1'] = "url"
 # find each storefront's url and add to excel
 for row_idx in range(2, sheet.max_row+1):
     storefront = sheet.cell(row=row_idx, column=1).value
-    sellerID = sheet.cell(row=row_idx, column=2).value
+    seller_ID = sheet.cell(row=row_idx, column=2).value
     print(f'storefront: {storefront}')
     possible_paths = convertStorefrontNameToPath(storefront)
-    sheet['C'+str(row_idx)] = getRightPath(storefront, sellerID, possible_paths)
+    sheet['C'+str(row_idx)] = getRightPath(storefront, seller_ID, possible_paths)
 
 # try to save
 workbook.save(os.path.splitext(file_path)[0] + " - " + datetime.datetime.now().strftime("%m-%d-%Y %I %M %p") + '.xlsx')
