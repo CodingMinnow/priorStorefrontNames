@@ -20,7 +20,6 @@ from utils.storefrontPageUtils import *
 start_time = time.time()
 
 # configure logging
-# https://docs.python.org/3/library/logging.html#logrecord-attributes
 logging.basicConfig(filename='app.log', format='%(asctime)s - filename: %(filename)s, line: %(levelno)s - %(message)s',  datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
 
 # verify total pages = 26 for each country
@@ -48,7 +47,7 @@ except mysql.connector.Error as err:
     raise Exception("Couldn't connect to database")
 cursor = cnx.cursor()
 
-add_storefront_name = ("INSERT INTO webscraper (SellerID, StorefrontName, NameCurrent, Country) VALUES (%(seller_ID)s, %(storefront_name)s, %(name_current)s, %(country)s)")
+add_storefront_name = ("INSERT INTO webscraper (SellerID, StorefrontName, NameCurrent, Country) VALUES (%(seller_ID)s, %(storefront_name)s, %(name_current)s, %(country)s, %(storefront_url)s)")
 
 # scrape storefront and its sellerratings url
 for country in base_urls:
@@ -92,12 +91,13 @@ for country in base_urls:
             seller_ID = getSellerID(key_para)
             prior_names = getPriorNames(key_para)
 
-            # insert current and past storefronts into database
+            # insert current and outdated storefront names into database
             storefront_data = {
                 'seller_ID': seller_ID,
                 'storefront_name': storefront,
                 'name_current': 1,
-                'country': country
+                'country': country,
+                'storefront_url': url
             }
             cursor.execute(add_storefront_name, storefront_data)
 
