@@ -20,7 +20,7 @@ from utils.storefrontPageUtils import *
 start_time = time.time()
 
 # configure logging
-logging.basicConfig(filename='app.log', format='%(asctime)s - filename: %(filename)s, line: %(levelno)s - %(message)s',  datefmt='%d-%b-%y %H:%M:%S', level=logging.INFO)
+logging.basicConfig(filename='app.log', format='%(asctime)s - filename: %(filename)s, line: %(levelno)s - %(message)s',  datefmt='%d-%b-%y %H:%M:%S', level=logging.DEBUG)
 
 # verify total pages = 26 for each country
 for url in base_urls.values():
@@ -47,8 +47,6 @@ except mysql.connector.Error as err:
     raise Exception("Couldn't connect to database")
 cursor = cnx.cursor()
 
-add_storefront_name = ("INSERT INTO webscraper (SellerID, StorefrontName, NameCurrent, Country) VALUES (%(seller_ID)s, %(storefront_name)s, %(name_current)s, %(country)s, %(storefront_url)s)")
-
 # scrape storefront and its sellerratings url
 for country in base_urls:
     # get all 25 pages
@@ -62,6 +60,9 @@ for country in base_urls:
             continue
 
         country_pages.append(res_country_page.content)
+
+        # wait seconds
+        time.sleep(5)
 
     # scrape each page
     for country_page in country_pages:
@@ -86,21 +87,28 @@ for country in base_urls:
                 continue
 
             # scrape the sellerID and prior names
-            soup_sf = BeautifulSoup(res_sf.content, "html.parser")
-            key_para = identifyKeyParagraph(soup_sf)
-            seller_ID = getSellerID(key_para)
-            prior_names = getPriorNames(key_para)
+            try:
+                soup_sf = BeautifulSoup(res_sf.content, "html.parser")
+                key_para = identifyKeyParagraph(soup_sf)
+                seller_ID = getSellerID(key_para)
+                prior_names = getPriorNames(key_para)
+            except:
+                logging.error(f'Problem with souping. Storefront: {storefront}, Country: {country}.')
+                continue
 
-            # insert current and outdated storefront names into database
+            # insert current storefront name into database
+            insert_current = ("INSERT INTO webscraper (SellerID, StorefrontName, NameCurrent, Country, StorefrontPath) VALUES (%(seller_ID)s, %(storefront_name)s, %(name_current)s, %(country)s, %(storefront_path)s)")
             storefront_data = {
                 'seller_ID': seller_ID,
                 'storefront_name': storefront,
                 'name_current': 1,
                 'country': country,
-                'storefront_url': url
+                'storefront_path': url
             }
-            cursor.execute(add_storefront_name, storefront_data)
+            cursor.execute(insert_current, storefront_data)
 
+            # insert outdated storefront name(s), if any, into database
+            insert_outdated = ("INSERT INTO webscraper (SellerID, StorefrontName, NameCurrent, Country) VALUES (%(seller_ID)s, %(storefront_name)s, %(name_current)s, %(country)s)")
             for prior_name in prior_names:
                 prior_name_data = {
                     'seller_ID': seller_ID,
@@ -108,15 +116,20 @@ for country in base_urls:
                     'name_current': 0,
                     'country': country
                 }
-                cursor.execute(add_storefront_name, prior_name_data)
+                cursor.execute(insert_outdated, prior_name_data)
             
             row = row.next_sibling.next_sibling
 
+            # wait seconds
+            time.sleep(5)
+    
+    # mysql
+    cnx.commit()
+
 # mysql
-cnx.commit()
 cursor.close()
 cnx.close()
 
 # execution time
 end_time = time.time()
-logging.info(f"Total runtime of the program is {(end_time - start_time)/60} minutes.")
+logging.info(f"Total runtime: {(end_time - start_time)/60} minutes.")

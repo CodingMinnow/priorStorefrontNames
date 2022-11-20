@@ -6,11 +6,11 @@ import requests
 
 base_urls = {
     'usa' : 'https://www.sellerratings.com/amazon/usa',
-    'uk' : 'https://www.sellerratings.com/amazon/uk',
-    'germany' : 'https://www.sellerratings.com/amazon/germany',
-    'france' : 'https://www.sellerratings.com/amazon/france',
-    'italy' : 'https://www.sellerratings.com/amazon/italy',
-    'spain' : 'https://www.sellerratings.com/amazon/spain',
+    # 'uk' : 'https://www.sellerratings.com/amazon/uk',
+    # 'germany' : 'https://www.sellerratings.com/amazon/germany',
+    # 'france' : 'https://www.sellerratings.com/amazon/france',
+    # 'italy' : 'https://www.sellerratings.com/amazon/italy',
+    # 'spain' : 'https://www.sellerratings.com/amazon/spain',
     # 'japan' : 'https://www.sellerratings.com/amazon/japan',
     'india' : 'https://www.sellerratings.com/amazon/india'
 }
